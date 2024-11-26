@@ -134,6 +134,7 @@ class FLOPsMeasurementCallback(Callback):
             "nemotron": self._nemotron,
             "mixtral": self._mixtral,
             "bert": self._bert,
+            "qwen2": self._qwen2,
         }
 
         if self.model is not None:
@@ -246,4 +247,23 @@ class FLOPsMeasurementCallback(Callback):
             * self.hs
             * self.hs
             * (1 + (self.enc_seq_len / (6 * self.hs)) + (vocab_size / (12 * self.hs * self.layers)))
+        )
+
+   def _qwen2(self):
+        """Model FLOPs for qwen2 family"""
+        vocab_size = LLM_VOCAB_SIZE_MAP["qwen2"]
+
+        return (
+            self.gbs
+            * self.enc_seq_len
+            * self.layers
+            * self.hs
+            * self.hs
+            * (
+                12
+                + (12 * self.query_groups / self.attention_heads)
+                + (18 * self.ffn_hs / self.hs)
+                + (12 * self.enc_seq_len / self.hs)
+                + (6 * vocab_size / (self.layers * self.hs))
+            )
         )
