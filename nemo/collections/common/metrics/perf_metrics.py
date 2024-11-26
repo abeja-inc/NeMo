@@ -41,7 +41,7 @@ class FLOPsMeasurementCallback(Callback):
                 moe_router_topk. (list might increase with new models as required)
         log_dir (Optional[str]): Directory with tenbsorboard log file. If present, will overrride
             'explicit_log_dir' in model_config. Defaults to None.
-        model_name (Optional[str]): If present, will override 'name' under 'run' in model_config.
+        model_name (Optional[str]): If present, will override 'name' under 'exp_manager' in model_config.
             Defaults to None.
     """
 
@@ -55,14 +55,13 @@ class FLOPsMeasurementCallback(Callback):
     ):
         self.cfg = model_config
 
-        self.run_cfg = self.cfg.get('run', {})
         # exp_manager = None is valid and indicates no exp_manager should be initialized
         self.exp_cfg = self.cfg.get('exp_manager', {}) or {}
         self.train_cfg = self.cfg.get('trainer', {})
         self.model_cfg = self.cfg.get('model', {})
 
         # use config params only when NOT provided explicitly
-        self.model = self.run_cfg.get('name', "") if model_name is None else model_name
+        self.model = self.exp_cfg.get('name', "") if model_name is None else model_name
         self.log_dir = self.exp_cfg.get('explicit_log_dir', None) if log_dir is None else log_dir
 
         self.num_nodes = self.train_cfg.get('num_nodes', None)
