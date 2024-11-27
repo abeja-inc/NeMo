@@ -249,7 +249,7 @@ class FLOPsMeasurementCallback(Callback):
             * (1 + (self.enc_seq_len / (6 * self.hs)) + (vocab_size / (12 * self.hs * self.layers)))
         )
 
-   def _qwen2(self):
+    def _qwen2(self):
         """Model FLOPs for qwen2 family"""
         vocab_size = LLM_VOCAB_SIZE_MAP["qwen2"]
 
