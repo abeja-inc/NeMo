@@ -422,7 +422,7 @@ class SaveRestoreConnector:
                 )
                 return None
 
-        assert os.path.exists(return_path)
+        assert os.path.exists(return_path), f"{return_path} not found"
 
         artifact_item.path = os.path.abspath(src)
         model.artifacts[config_path] = artifact_item

@@ -96,11 +96,17 @@ def get_args():
         help="Load model in cpu only. Useful if the model cannot fit in GPU memory, "
         "but this option makes the conversion script significantly slower.",
     )
+    parser.add_argument(
+        "--vocab_size",
+        type=int,
+        default=None,
+        help="Vocabulary size for the tokenizer. Defaults to None.",
+    )
     args = parser.parse_args()
     return args
 
 
-def convert(input_nemo_file, output_hf_file, precision=None, cpu_only=False) -> None:
+def convert(input_nemo_file, output_hf_file, precision=None, cpu_only=False, vocab_size=None) -> None:
     """
     Convert NeMo weights to HF weights
     """
@@ -149,7 +155,15 @@ def convert(input_nemo_file, output_hf_file, precision=None, cpu_only=False) -> 
     # Embedding
     embed_weight = model.state_dict()[f'model.embedding.word_embeddings.weight']
     embed_weights_base_name = f'model.embed_tokens.weight'
-    checkpoint[embed_weights_base_name] = param_to_weights(embed_weight)
+    if vocab_size:
+        if embed_weight.shape[0] > vocab_size:
+            checkpoint[embed_weights_base_name] = param_to_weights(embed_weight)[:vocab_size]
+        else:
+            checkpoint[embed_weights_base_name] = torch.nn.functional.pad(
+                param_to_weights(embed_weight), (0, 0, 0, vocab_size - embed_weight.shape[0])
+            )
+    else:
+        checkpoint[embed_weights_base_name] = param_to_weights(embed_weight)
 
     for l in range(int(num_layers)):
         print(f"converting layer {l}")
@@ -244,7 +258,16 @@ def convert(input_nemo_file, output_hf_file, precision=None, cpu_only=False) -> 
 
     output_layer_weight = model.state_dict()[f'model.output_layer.weight']
     output_layer_base_name = f'lm_head.weight'
-    checkpoint[output_layer_base_name] = param_to_weights(output_layer_weight)
+    if vocab_size:
+        if embed_weight.shape[0] > vocab_size:
+            checkpoint[output_layer_base_name] = param_to_weights(output_layer_weight)[:vocab_size]
+        else:
+            checkpoint[output_layer_base_name] = torch.nn.functional.pad(
+                param_to_weights(output_layer_weight), (0, 0, 0, vocab_size - output_layer_weight.shape[0])
+            )
+    else:
+        checkpoint[output_layer_base_name] = param_to_weights(output_layer_weight)
+    # checkpoint[output_layer_base_name] = param_to_weights(output_layer_weight)
 
     os.makedirs(os.path.dirname(output_hf_file), exist_ok=True)
     torch.save(checkpoint, output_hf_file)
@@ -293,7 +316,7 @@ if __name__ == '__main__':
     args = get_args()
     if not args.hf_output_tokenizer and args.hf_output_path:
         args.hf_output_tokenizer = args.hf_output_path
-    dtype = convert(args.input_name_or_path, args.output_path, precision=args.precision, cpu_only=args.cpu_only)
+    dtype = convert(args.input_name_or_path, args.output_path, precision=args.precision, cpu_only=args.cpu_only, vocab_size=args.vocab_size)
     if args.hf_input_path and args.hf_output_path:
         replace_hf_weights_and_tokenizer(
             args.output_path,

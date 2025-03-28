@@ -94,7 +94,11 @@ def replace_number_add_offset(key, offset_value):
 
 def load_lora(lora_nemo):
     with tempfile.TemporaryDirectory() as tmpdir:
-        NLPSaveRestoreConnector._unpack_nemo_file(lora_nemo, tmpdir)
+        # tarじゃない場合はそのまま使うよう修正
+        if os.path.isdir(lora_nemo):
+             tmpdir = lora_nemo
+        else:
+            NLPSaveRestoreConnector._unpack_nemo_file(lora_nemo, tmpdir)
         config_file = f"{tmpdir}/model_config.yaml"
         lora_config = OmegaConf.load(config_file)
         tp_size = lora_config.tensor_model_parallel_size

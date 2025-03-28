@@ -329,7 +329,6 @@ class MegatronGPTModel(MegatronBaseModel, TextGeneration):
         # this prevents base constructor from initializing tokenizer
         self.tokenizer = None
         super().__init__(cfg, trainer=trainer, no_lm_init=True)
-
         self._validate_trainer()
 
         # build the transformer config

@@ -24,8 +24,8 @@ try:
 
     HAVE_MAMBA_SSM = True
 
-except ModuleNotFoundError:
-
+# except ModuleNotFoundError:
+except:
     HAVE_MAMBA_SSM = False
 
 try:
